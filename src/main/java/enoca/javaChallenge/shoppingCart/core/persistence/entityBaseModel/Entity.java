@@ -1,6 +1,5 @@
 package enoca.javaChallenge.shoppingCart.core.persistence.entityBaseModel;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,6 +12,5 @@ public class Entity<TId> {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name="Id")
-	protected TId id;
+	private TId id;
 }

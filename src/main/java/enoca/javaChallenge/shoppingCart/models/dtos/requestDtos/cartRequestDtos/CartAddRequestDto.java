@@ -11,5 +11,6 @@ public class CartAddRequestDto {
 
 	private int customerId;
 	private int productId;
+	private int orderId;
 	private int productCount;	
 }

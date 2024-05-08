@@ -11,7 +11,7 @@ public class CartUpdateRequestDto {
 
 	private int id;
 	private int productCount;
-	private double totalPrice;
 	private int customerId;
 	private int productId;
+	private int orderId;
 }

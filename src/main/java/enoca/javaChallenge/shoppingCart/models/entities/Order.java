@@ -1,11 +1,13 @@
 package enoca.javaChallenge.shoppingCart.models.entities;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import enoca.javaChallenge.shoppingCart.core.persistence.entityBaseModel.Entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,6 +30,9 @@ public class Order extends Entity<Integer>{
 	private boolean isActive;
 	
 	@ManyToOne
-	@JoinColumn(name="customer_id")
+	@JoinColumn(name="customerId")
 	private Customer customer;
+	
+	@OneToMany(mappedBy = "order")
+	private List<Cart> carts;
 }

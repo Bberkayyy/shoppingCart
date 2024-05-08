@@ -1,7 +1,9 @@
 package enoca.javaChallenge.shoppingCart.models.dtos.responseDtos.orderResponseDtos;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import enoca.javaChallenge.shoppingCart.models.dtos.responseDtos.cartResponseDtos.CartResponseForOrderDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,5 +17,6 @@ public class OrderResponseDto {
 	private LocalDateTime createdDate;
 	private LocalDateTime closingDate;
 	private boolean isActive;
-	private String customerFirst_Name;
+	private String customerEmail;
+	private List<CartResponseForOrderDto> carts;
 }

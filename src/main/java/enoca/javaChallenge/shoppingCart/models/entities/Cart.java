@@ -25,12 +25,15 @@ public class Cart extends Entity<Integer> {
 	private double totalPrice;
 	
 	@ManyToOne
-	@JoinColumn(name="product_id")
+	@JoinColumn(name="productId")
 	private Product product;
-
 	
 	@OneToOne
-	@JoinColumn(name="customer_id")
+	@JoinColumn(name="customerId")
 	private Customer customer;
+	
+	@ManyToOne
+	@JoinColumn(name="orderId")
+	private Order order;
 
 }

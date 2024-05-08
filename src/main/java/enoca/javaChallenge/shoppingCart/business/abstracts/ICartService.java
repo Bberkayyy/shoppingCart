@@ -14,5 +14,6 @@ public interface ICartService {
 	Response<List<CartResponseDto>> getCustomerCart(int customerId);
 	Response<List<CartResponseDto>> getAll();
 	Response<CartResponseDto> deleteAllProduct(int id);
-	Response<CartResponseDto> decreseProductCount(int id);
+	Response<CartResponseDto> decreaseProductCount(int id);
+	Response<CartResponseDto> increaseProductCount(int id);
 }

@@ -6,4 +6,5 @@ import enoca.javaChallenge.shoppingCart.models.entities.Customer;
 
 public interface CustomerRepository extends JpaRepository<Customer, Integer>{
 
+	Customer getByEmail(String email);
 }

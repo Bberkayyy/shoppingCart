@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import enoca.javaChallenge.shoppingCart.business.abstracts.IOrderService;
+import enoca.javaChallenge.shoppingCart.business.businessRules.abstracts.IOrderRules;
 import enoca.javaChallenge.shoppingCart.core.shared.Response;
 import enoca.javaChallenge.shoppingCart.core.utilities.mappers.IModelMapperService;
 import enoca.javaChallenge.shoppingCart.dataAccess.abstracts.OrderRepository;
@@ -22,20 +23,28 @@ public class OrderManager implements IOrderService {
 
 	private final OrderRepository orderRepository;
 	private final IModelMapperService modelMapperService;
+	private final IOrderRules orderRules;
 
 	@Override
 	public Response<OrderResponseDto> placeOrder(PlaceOrderRequestDto placeRequestDto) {
 
-		Order order = this.modelMapperService.forRequest().map(placeRequestDto, Order.class);
-		order.setCreatedDate(LocalDateTime.now());
-		order.setActive(true);
-		this.orderRepository.save(order);
-		OrderResponseDto data = this.modelMapperService.forResponse().map(order, OrderResponseDto.class);
+		try {
+			this.orderRules.CustomerIsPresent(placeRequestDto.getCustomerId());
+			Order order = this.modelMapperService.forRequest().map(placeRequestDto, Order.class);
+			order.setCreatedDate(LocalDateTime.now());
+			order.setActive(true);
+			this.orderRepository.save(order);
 
-		Response<OrderResponseDto> response = new Response<OrderResponseDto>();
-		response.setData(data);
-		response.setStatusCode(HttpStatus.CREATED);
-		return response;
+			Response<OrderResponseDto> response = new Response<OrderResponseDto>();
+			response.setStatusCode(HttpStatus.CREATED);
+			return response;
+		} catch (Exception e) {
+			Response<OrderResponseDto> response = new Response<OrderResponseDto>();
+			response.setMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+			return response;
+		}
+		
 	}
 
 	@Override

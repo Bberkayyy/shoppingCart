@@ -2,10 +2,11 @@ package enoca.javaChallenge.shoppingCart.models.entities;
 
 
 
+import java.util.List;
+
 import enoca.javaChallenge.shoppingCart.core.persistence.entityBaseModel.Entity;
 import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,8 +28,7 @@ public class Product extends Entity<Integer>{
 	@Column(name="price")
 	private double price;
 	
-	@ManyToOne
-	@JoinColumn(name="cart_id")
-	private Cart cart;
+	@OneToMany(mappedBy = "product")
+	private List<Cart> carts;
 	
 }

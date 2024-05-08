@@ -24,6 +24,8 @@ public class Customer extends Entity<Integer> {
 	private String firstName;
 	@Column(name = "lastName")
 	private String lastName;
+	@Column(name="email")
+	private String email;
 
 	@OneToMany(mappedBy = "customer")
 	private List<Order> orders;
