@@ -11,7 +11,10 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
 	@Query("From Order where customer.id=:customerId")
 	List<Order> getByCustomer(int customerId);
-	
+
 	@Query("From Order where customer.id=:customerId and isActive = false")
 	List<Order> getByCustomerAndIsActive(int customerId);
+
+	@Query("From Order where isActive= true")
+	List<Order> getAllOrderByIsActiveTrue();
 }

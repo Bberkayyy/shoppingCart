@@ -5,4 +5,6 @@ import enoca.javaChallenge.shoppingCart.core.crossCuttingConcerns.exceptions.Bus
 public interface IOrderRules {
 
 	void CustomerIsPresent(int customerId) throws BusinessException;
+	void OrderListByCustomer(int customerId) throws BusinessException;
+	void OrderIsPresent(int id) throws BusinessException;
 }

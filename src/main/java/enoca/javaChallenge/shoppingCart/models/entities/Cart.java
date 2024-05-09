@@ -4,7 +4,6 @@ import enoca.javaChallenge.shoppingCart.core.persistence.entityBaseModel.Entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,11 +26,7 @@ public class Cart extends Entity<Integer> {
 	@ManyToOne
 	@JoinColumn(name="productId")
 	private Product product;
-	
-	@OneToOne
-	@JoinColumn(name="customerId")
-	private Customer customer;
-	
+
 	@ManyToOne
 	@JoinColumn(name="orderId")
 	private Order order;

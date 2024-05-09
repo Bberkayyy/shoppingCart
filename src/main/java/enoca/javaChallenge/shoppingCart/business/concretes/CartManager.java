@@ -31,76 +31,37 @@ public class CartManager implements ICartService {
 	private final IModelMapperService modelMapperService;
 	private final ICartRules cartRules;
 
-	@Override
-	public Response<CartResponseDto> update(CartUpdateRequestDto updateRequestDto) {
-
-		try {
-			this.cartRules.CustomerIsPresent(updateRequestDto.getCustomerId());
-			this.cartRules.OrderIsPresent(updateRequestDto.getOrderId());
-			this.cartRules.ProductIsPresent(updateRequestDto.getProductId());
-			this.cartRules.ProductCountCanNotBeNegative(updateRequestDto.getProductCount());
-			Cart cart = this.modelMapperService.forRequest().map(updateRequestDto, Cart.class);
-			Product product = this.productRepository.getById(updateRequestDto.getProductId());
-			double totalPrice = (double) cart.getProductCount() * (double) product.getPrice();
-			cart.setTotalPrice(totalPrice);
-			this.cartRepository.save(cart);
-			CartResponseDto data = this.modelMapperService.forResponse().map(cart, CartResponseDto.class);
-
-			Response<CartResponseDto> response = new Response<CartResponseDto>();
-			response.setData(data);
-			response.setMessage("Sepet güncellendi.");
-			response.setStatusCode(HttpStatus.OK);
-			return response;
-		} catch (Exception e) {
-			Response<CartResponseDto> response = new Response<CartResponseDto>();
-			response.setMessage(e.getMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-			return response;
-		}
-
-	}
-
-	@Override
-	public Response<List<CartResponseDto>> getCustomerCart(int customerId) {
-
-		try {
-			this.cartRules.CustomerIsPresent(customerId);
-			List<Cart> carts = this.cartRepository.getByCustomer(customerId);
-			List<CartResponseDto> data = carts.stream()
-					.map(x -> this.modelMapperService.forResponse().map(x, CartResponseDto.class))
-					.collect(Collectors.toList());
-
-			Response<List<CartResponseDto>> response = new Response<List<CartResponseDto>>();
-			response.setData(data);
-			response.setStatusCode(HttpStatus.OK);
-			return response;
-		} catch (Exception e) {
-			Response<List<CartResponseDto>> response = new Response<List<CartResponseDto>>();
-			response.setMessage(e.getMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-			return response;
-		}
-
-	}
 
 	@Override
 	public Response<CartResponseDto> add(CartAddRequestDto addRequestDto) {
 
 		try {
-			this.cartRules.CustomerIsPresent(addRequestDto.getCustomerId());
 			this.cartRules.OrderIsPresent(addRequestDto.getOrderId());
+			this.cartRules.OrderCanNotBeChangedIfHasBeenClosed(addRequestDto.getOrderId());
 			this.cartRules.ProductIsPresent(addRequestDto.getProductId());
 			this.cartRules.ProductCountCanNotBeNegative(addRequestDto.getProductCount());
 			Cart cart = this.modelMapperService.forRequest().map(addRequestDto, Cart.class);
 			Product product = this.productRepository.getById(addRequestDto.getProductId());
 			Order order = this.orderRepository.getById(addRequestDto.getOrderId());
-			double totalPrice = (double) cart.getProductCount() * (double) product.getPrice();
-			cart.setTotalPrice(totalPrice);
-			if (order != null) {
-				order.getCarts().add(cart);
+			Cart existingCart = this.cartRepository.getByProduct_IdAndOrder_Id(addRequestDto.getProductId(),
+					addRequestDto.getOrderId());
+			if (existingCart != null) {
+				int newProductCount = existingCart.getProductCount() + addRequestDto.getProductCount();
+				double newTotalPrice = existingCart.getTotalPrice()
+						+ product.getPrice() * addRequestDto.getProductCount();
+				existingCart.setProductCount(newProductCount);
+				existingCart.setTotalPrice(newTotalPrice);
+				order.setTotalAmount(order.getTotalAmount() + product.getPrice() * addRequestDto.getProductCount());
+				this.cartRepository.save(existingCart);
+			} else {
+				double totalPrice = (double) cart.getProductCount() * (double) product.getPrice();
+				cart.setTotalPrice(totalPrice);
+				if (order != null) {
+					order.getCarts().add(cart);
+					order.setTotalAmount(order.getTotalAmount() + totalPrice);
+				}
+				this.cartRepository.save(cart);
 			}
-			this.cartRepository.save(cart);
-
 			Response<CartResponseDto> response = new Response<CartResponseDto>();
 			response.setMessage("Ürün sepete eklendi.");
 			response.setStatusCode(HttpStatus.CREATED);
@@ -134,6 +95,9 @@ public class CartManager implements ICartService {
 		try {
 			Cart cart = this.cartRepository.getById(id);
 			this.cartRules.CartIsPresent(cart);
+			this.cartRules.OrderCanNotBeChangedIfHasBeenClosed(cart.getOrder().getId());
+			Order order = this.orderRepository.getById(cart.getOrder().getId());
+			order.setTotalAmount(order.getTotalAmount() - cart.getTotalPrice());
 			this.cartRepository.delete(cart);
 			Response<CartResponseDto> response = new Response<CartResponseDto>();
 			response.setMessage("Ürün sepetten kaldırıldı.");
@@ -152,11 +116,13 @@ public class CartManager implements ICartService {
 
 		try {
 			Cart cart = this.cartRepository.getById(id);
+			Order order = this.orderRepository.getById(cart.getOrder().getId());
 			int newProductCount = cart.getProductCount() - 1;
 			this.cartRules.ProductCountCanNotBeNegative(newProductCount);
 			double newTotalPrice = cart.getTotalPrice() - cart.getProduct().getPrice();
 			cart.setProductCount(newProductCount);
 			cart.setTotalPrice(newTotalPrice);
+			order.setTotalAmount(order.getTotalAmount() - cart.getProduct().getPrice());
 			this.cartRepository.save(cart);
 
 			Response<CartResponseDto> response = new Response<CartResponseDto>();
@@ -176,10 +142,12 @@ public class CartManager implements ICartService {
 	public Response<CartResponseDto> increaseProductCount(int id) {
 
 		Cart cart = this.cartRepository.getById(id);
+		Order order = this.orderRepository.getById(cart.getOrder().getId());
 		int newProductCount = cart.getProductCount() + 1;
 		double newTotalPrice = cart.getTotalPrice() + cart.getProduct().getPrice();
 		cart.setProductCount(newProductCount);
 		cart.setTotalPrice(newTotalPrice);
+		order.setTotalAmount(order.getTotalAmount() + cart.getProduct().getPrice());
 		this.cartRepository.save(cart);
 
 		Response<CartResponseDto> response = new Response<CartResponseDto>();
@@ -189,3 +157,25 @@ public class CartManager implements ICartService {
 	}
 
 }
+//@Override
+//public Response<List<CartResponseDto>> getCustomerCart(int customerId) {
+//
+//	try {
+//		this.cartRules.CustomerIsPresent(customerId);
+//		List<Cart> carts = this.cartRepository.getByCustomer(customerId);
+//		List<CartResponseDto> data = carts.stream()
+//				.map(x -> this.modelMapperService.forResponse().map(x, CartResponseDto.class))
+//				.collect(Collectors.toList());
+//
+//		Response<List<CartResponseDto>> response = new Response<List<CartResponseDto>>();
+//		response.setData(data);
+//		response.setStatusCode(HttpStatus.OK);
+//		return response;
+//	} catch (Exception e) {
+//		Response<List<CartResponseDto>> response = new Response<List<CartResponseDto>>();
+//		response.setMessage(e.getMessage());
+//		response.setStatusCode(HttpStatus.BAD_REQUEST);
+//		return response;
+//	}
+//
+//}

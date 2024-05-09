@@ -6,11 +6,9 @@ import org.springframework.stereotype.Service;
 
 import enoca.javaChallenge.shoppingCart.business.businessRules.abstracts.ICartRules;
 import enoca.javaChallenge.shoppingCart.core.crossCuttingConcerns.exceptions.BusinessException;
-import enoca.javaChallenge.shoppingCart.dataAccess.abstracts.CustomerRepository;
 import enoca.javaChallenge.shoppingCart.dataAccess.abstracts.OrderRepository;
 import enoca.javaChallenge.shoppingCart.dataAccess.abstracts.ProductRepository;
 import enoca.javaChallenge.shoppingCart.models.entities.Cart;
-import enoca.javaChallenge.shoppingCart.models.entities.Customer;
 import enoca.javaChallenge.shoppingCart.models.entities.Order;
 import enoca.javaChallenge.shoppingCart.models.entities.Product;
 import lombok.AllArgsConstructor;
@@ -21,7 +19,6 @@ public class CartRules implements ICartRules {
 
 	private final ProductRepository productRepository;
 	private final OrderRepository orderRepository;
-	private final CustomerRepository customerRepository;
 
 	@Override
 	public void ProductCanNotAddToCartIfStockIs0(int id) throws BusinessException {
@@ -39,7 +36,7 @@ public class CartRules implements ICartRules {
 		Order order = this.orderRepository.getById(id);
 		if (order == null) {
 			throw new BusinessException(
-					"Sepetinize ürün eklemek için sipariş oluşturmanız gerekmektedir. Lütfen önce sipariş oluşturun.");
+					"İşlem yapmak istediğiniz sipariş bulunamadı. İşlem yapmak için önce sipariş oluşturun.");
 		}
 	}
 
@@ -50,19 +47,8 @@ public class CartRules implements ICartRules {
 		if (product != null) {
 			ProductCanNotAddToCartIfStockIs0(id);
 		} else {
-			throw new BusinessException(MessageFormat.format(
-					"Girilen id({0}) değerine ait ürün bulunamadı. Lütfen geçerli bir ürün id giriniz.", id));
-		}
-	}
-
-	@Override
-	public void CustomerIsPresent(int id) throws BusinessException {
-
-		Customer customer = this.customerRepository.getById(id);
-		if (customer == null) {
-			throw new BusinessException(MessageFormat.format(
-					"Girilen müşteri id({0}) değerine ait müşteri bulunamadı. Lütfen geçerli bir müşteri id giriniz.",
-					id));
+			throw new BusinessException(MessageFormat
+					.format("Girilen id({0}) değerine ait ürün bulunamadı. Lütfen geçerli bir ürün id giriniz.", id));
 		}
 	}
 
@@ -70,8 +56,8 @@ public class CartRules implements ICartRules {
 	public void ProductCountCanNotBeNegative(int count) throws BusinessException {
 
 		if (count <= 0) {
-			throw new BusinessException(MessageFormat.format(
-					"Ürün miktarı en az 1 olmalıdır. Lütfen geçerli ürün miktarı giriniz. ({0})", count));
+			throw new BusinessException(MessageFormat
+					.format("Ürün miktarı en az 1 olmalıdır. Lütfen geçerli ürün miktarı giriniz. ({0})", count));
 		}
 	}
 
@@ -79,6 +65,17 @@ public class CartRules implements ICartRules {
 	public void CartIsPresent(Cart cart) throws BusinessException {
 		if (cart == null) {
 			throw new BusinessException("Sepet bulunamadı!");
+		}
+	}
+
+	@Override
+	public void OrderCanNotBeChangedIfHasBeenClosed(int orderId) throws BusinessException {
+
+		Order order = this.orderRepository.getById(orderId);
+		if (order.getClosingDate() != null && order.isActive() == false) {
+			throw new BusinessException(MessageFormat.format(
+					"İşlem yapmak istediğiniz sipariş kapatılmıştır ({0}). Lütfen aktif bir sipariş seçiniz.",
+					orderId));
 		}
 	}
 

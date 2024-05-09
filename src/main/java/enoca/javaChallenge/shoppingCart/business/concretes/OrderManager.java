@@ -30,12 +30,15 @@ public class OrderManager implements IOrderService {
 
 		try {
 			this.orderRules.CustomerIsPresent(placeRequestDto.getCustomerId());
+			this.orderRules.OrderListByCustomer(placeRequestDto.getCustomerId());
 			Order order = this.modelMapperService.forRequest().map(placeRequestDto, Order.class);
 			order.setCreatedDate(LocalDateTime.now());
 			order.setActive(true);
+			order.setTotalAmount(0);
 			this.orderRepository.save(order);
 
 			Response<OrderResponseDto> response = new Response<OrderResponseDto>();
+			response.setMessage("Sipariş oluşturuldu.");
 			response.setStatusCode(HttpStatus.CREATED);
 			return response;
 		} catch (Exception e) {
@@ -44,13 +47,26 @@ public class OrderManager implements IOrderService {
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 			return response;
 		}
-		
+
 	}
 
 	@Override
 	public Response<List<OrderResponseDto>> getAll() {
 
 		List<Order> orders = this.orderRepository.findAll();
+		List<OrderResponseDto> data = orders.stream()
+				.map(x -> this.modelMapperService.forResponse().map(x, OrderResponseDto.class))
+				.collect(Collectors.toList());
+
+		Response<List<OrderResponseDto>> response = new Response<List<OrderResponseDto>>();
+		response.setData(data);
+		response.setStatusCode(HttpStatus.OK);
+		return response;
+	}
+
+	public Response<List<OrderResponseDto>> getAllByIsActiveTrue() {
+
+		List<Order> orders = this.orderRepository.getAllOrderByIsActiveTrue();
 		List<OrderResponseDto> data = orders.stream()
 				.map(x -> this.modelMapperService.forResponse().map(x, OrderResponseDto.class))
 				.collect(Collectors.toList());
@@ -113,7 +129,7 @@ public class OrderManager implements IOrderService {
 		List<OrderResponseDto> data = orders.stream()
 				.map(x -> this.modelMapperService.forResponse().map(x, OrderResponseDto.class))
 				.collect(Collectors.toList());
-		
+
 		Response<List<OrderResponseDto>> response = new Response<List<OrderResponseDto>>();
 		response.setData(data);
 		response.setStatusCode(HttpStatus.OK);
@@ -127,11 +143,28 @@ public class OrderManager implements IOrderService {
 		List<OrderResponseDto> data = orders.stream()
 				.map(x -> this.modelMapperService.forResponse().map(x, OrderResponseDto.class))
 				.collect(Collectors.toList());
-		
+
 		Response<List<OrderResponseDto>> response = new Response<List<OrderResponseDto>>();
 		response.setData(data);
 		response.setStatusCode(HttpStatus.OK);
 		return response;
+	}
+
+	@Override
+	public Response<OrderResponseDto> delete(int id) {
+		try {
+			Order order = this.orderRepository.getById(id);
+			this.orderRules.OrderIsPresent(id);
+			this.orderRepository.delete(order);
+			Response<OrderResponseDto> response = new Response<OrderResponseDto>();
+			response.setMessage("Sipariş silindi.");
+			return response;
+		} catch (Exception e) {
+			Response<OrderResponseDto> response = new Response<OrderResponseDto>();
+			response.setMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+			return response;
+		}
 	}
 
 }

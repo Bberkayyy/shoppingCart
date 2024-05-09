@@ -10,8 +10,8 @@ import enoca.javaChallenge.shoppingCart.models.dtos.responseDtos.cartResponseDto
 public interface ICartService {
 
 	Response<CartResponseDto> add(CartAddRequestDto addRequestDto);
-	Response<CartResponseDto> update (CartUpdateRequestDto updateRequestDto);
-	Response<List<CartResponseDto>> getCustomerCart(int customerId);
+//	Response<CartResponseDto> update (CartUpdateRequestDto updateRequestDto);
+//	Response<List<CartResponseDto>> getCustomerCart(int customerId);
 	Response<List<CartResponseDto>> getAll();
 	Response<CartResponseDto> deleteAllProduct(int id);
 	Response<CartResponseDto> decreaseProductCount(int id);

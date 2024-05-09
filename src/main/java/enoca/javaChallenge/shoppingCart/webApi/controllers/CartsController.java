@@ -27,18 +27,6 @@ public class CartsController {
 
 	private final ICartService cartService;
 
-	@PutMapping(value = "update", consumes = "application/json", produces = "application/json")
-	@ResponseStatus(HttpStatus.OK)
-	public Response<CartResponseDto> update(@Valid @RequestBody CartUpdateRequestDto updateRequestDto) {
-		return this.cartService.update(updateRequestDto);
-	}
-
-	@GetMapping(value = "getcustomerscart", produces = "application/json")
-	@ResponseStatus(HttpStatus.OK)
-	public Response<List<CartResponseDto>> getCustomerCart(int customerId) {
-		return this.cartService.getCustomerCart(customerId);
-	}
-
 	@PostMapping(value = "addtocart", consumes = "application/json", produces = "application/json")
 	@ResponseStatus(HttpStatus.CREATED)
 	public Response<CartResponseDto> add(@Valid @RequestBody CartAddRequestDto addRequestDto) {

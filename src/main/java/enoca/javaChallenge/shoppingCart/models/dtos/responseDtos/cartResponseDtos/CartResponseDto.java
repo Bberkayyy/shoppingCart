@@ -13,5 +13,5 @@ public class CartResponseDto {
 	private String productName;
 	private int productCount;
 	private double totalPrice;
-	private String customerEmail;
+	private String orderCustomerEmail;
 }

@@ -18,5 +18,6 @@ public class OrderResponseDto {
 	private LocalDateTime closingDate;
 	private boolean isActive;
 	private String customerEmail;
+	private double totalAmount;
 	private List<CartResponseForOrderDto> carts;
 }

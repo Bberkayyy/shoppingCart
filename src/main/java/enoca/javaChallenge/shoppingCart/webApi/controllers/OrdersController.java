@@ -3,6 +3,7 @@ package enoca.javaChallenge.shoppingCart.webApi.controllers;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,6 +31,11 @@ public class OrdersController {
 	public Response<List<OrderResponseDto>> getAll() {
 		return this.orderService.getAll();
 	}
+	@GetMapping(value = "getactiveorders", produces = "application/json")
+	@ResponseStatus(HttpStatus.OK)
+	public Response<List<OrderResponseDto>> getAllByIsActiveTrue(){
+		return this.orderService.getAllByIsActiveTrue();
+	}
 
 	@PostMapping(value = "placeOrder", consumes = "application/json", produces = "application/json")
 	@ResponseStatus(HttpStatus.CREATED)
@@ -51,8 +57,14 @@ public class OrdersController {
 
 	@GetMapping(value = "getbyid", produces = "application/json")
 	@ResponseStatus(HttpStatus.OK)
-	public Response<OrderResponseDto> get(@PathVariable int id) {
+	public Response<OrderResponseDto> get(int id) {
 		return this.orderService.get(id);
+	}
+	
+	@DeleteMapping(value = "delete", produces = "application/json")
+	@ResponseStatus(HttpStatus.OK)
+	public Response<OrderResponseDto> delete(int id) {
+		return this.orderService.delete(id);
 	}
 
 	@GetMapping(value = "getByCustomerId", produces = "application/json")
@@ -61,7 +73,7 @@ public class OrdersController {
 		return this.orderService.getByCustomer(customerId);
 	}
 
-	@GetMapping(value = "getByCustomerIdAndIsActiveFalse", produces = "application/json")
+	@GetMapping(value = "getByCustomerOrderHistory", produces = "application/json")
 	@ResponseStatus(HttpStatus.OK)
 	public Response<List<OrderResponseDto>> getByCustomerAndIsActiveFalse(int customerId) {
 		return this.orderService.getByCustomerAndIsActiveFalse(customerId);
