@@ -1,6 +1,7 @@
 package enoca.javaChallenge.shoppingCart.models.entities;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import enoca.javaChallenge.shoppingCart.core.persistence.entityBaseModel.Entity;
@@ -15,27 +16,38 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Table(name="orders")
+@Table(name = "orders")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @jakarta.persistence.Entity
-public class Order extends Entity<Integer>{
+public class Order extends Entity<Integer> {
 
-	@Column(name="createdDate")
+	public Order(LocalDateTime createdDate, LocalDateTime closingDate, boolean isActive, double totalAmount,
+			Customer customer) {
+		super();
+		this.createdDate = createdDate;
+		this.closingDate = closingDate;
+		this.isActive = isActive;
+		this.totalAmount = totalAmount;
+		this.customer = customer;
+		this.carts = new ArrayList<>();
+	}
+
+	@Column(name = "createdDate")
 	private LocalDateTime createdDate;
-	@Column(name="closingDate")
+	@Column(name = "closingDate")
 	private LocalDateTime closingDate;
-	@Column(name="isActive")
+	@Column(name = "isActive")
 	private boolean isActive;
-	@Column(name="totalAmount")
+	@Column(name = "totalAmount")
 	private double totalAmount;
-	
+
 	@ManyToOne
-	@JoinColumn(name="customerId")
+	@JoinColumn(name = "customerId")
 	private Customer customer;
-	
-	@OneToMany(mappedBy = "order",cascade = CascadeType.REMOVE )
+
+	@OneToMany(mappedBy = "order", cascade = CascadeType.REMOVE)
 	private List<Cart> carts;
 }

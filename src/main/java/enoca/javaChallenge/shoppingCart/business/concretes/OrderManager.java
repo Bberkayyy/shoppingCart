@@ -30,7 +30,7 @@ public class OrderManager implements IOrderService {
 
 		try {
 			this.orderRules.CustomerIsPresent(placeRequestDto.getCustomerId());
-			this.orderRules.OrderListByCustomer(placeRequestDto.getCustomerId());
+			this.orderRules.OrderCanNotBeCreatedWhenHaveUnclosedOrder(placeRequestDto.getCustomerId());
 			Order order = this.modelMapperService.forRequest().map(placeRequestDto, Order.class);
 			order.setCreatedDate(LocalDateTime.now());
 			order.setActive(true);
@@ -80,60 +80,70 @@ public class OrderManager implements IOrderService {
 	@Override
 	public Response<OrderResponseDto> isActiveToFalse(int id) {
 
-		Order order = this.orderRepository.getById(id);
-		order.setActive(false);
-		order.setClosingDate(LocalDateTime.now());
-		this.orderRepository.save(order);
-		OrderResponseDto data = this.modelMapperService.forResponse().map(order, OrderResponseDto.class);
+		try {
+			Order order = this.orderRepository.getById(id);
+			this.orderRules.OrderIsPresent(id);
+			order.setActive(false);
+			order.setClosingDate(LocalDateTime.now());
+			this.orderRepository.save(order);
+			OrderResponseDto data = this.modelMapperService.forResponse().map(order, OrderResponseDto.class);
 
-		Response<OrderResponseDto> response = new Response<OrderResponseDto>();
-		response.setData(data);
-		response.setMessage("Sipariş kapatıldı.");
-		response.setStatusCode(HttpStatus.OK);
-		return response;
+			Response<OrderResponseDto> response = new Response<OrderResponseDto>();
+			response.setData(data);
+			response.setMessage("Sipariş kapatıldı.");
+			response.setStatusCode(HttpStatus.OK);
+			return response;
+		} catch (Exception e) {
+			Response<OrderResponseDto> response = new Response<OrderResponseDto>();
+			response.setMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+			return response;
+		}
 
-	}
-
-	@Override
-	public Response<OrderResponseDto> isActiveToTrue(int id) {
-
-		Order order = this.orderRepository.getById(id);
-		order.setActive(true);
-		order.setClosingDate(null);
-		this.orderRepository.save(order);
-		OrderResponseDto data = this.modelMapperService.forResponse().map(order, OrderResponseDto.class);
-
-		Response<OrderResponseDto> response = new Response<OrderResponseDto>();
-		response.setData(data);
-		response.setMessage("Sipariş tekrar aktif edildi.");
-		response.setStatusCode(HttpStatus.OK);
-		return response;
 	}
 
 	@Override
 	public Response<OrderResponseDto> get(int id) {
 
-		Order order = this.orderRepository.getById(id);
-		OrderResponseDto data = this.modelMapperService.forResponse().map(order, OrderResponseDto.class);
+		try {
+			Order order = this.orderRepository.getById(id);
+			this.orderRules.OrderIsPresent(id);
+			OrderResponseDto data = this.modelMapperService.forResponse().map(order, OrderResponseDto.class);
 
-		Response<OrderResponseDto> response = new Response<OrderResponseDto>();
-		response.setData(data);
-		response.setStatusCode(HttpStatus.OK);
-		return null;
+			Response<OrderResponseDto> response = new Response<OrderResponseDto>();
+			response.setData(data);
+			response.setStatusCode(HttpStatus.OK);
+			return response;
+		} catch (Exception e) {
+			Response<OrderResponseDto> response = new Response<OrderResponseDto>();
+			response.setMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+			return response;
+		}
+
 	}
 
 	@Override
 	public Response<List<OrderResponseDto>> getByCustomer(int customerId) {
 
-		List<Order> orders = this.orderRepository.getByCustomer(customerId);
-		List<OrderResponseDto> data = orders.stream()
-				.map(x -> this.modelMapperService.forResponse().map(x, OrderResponseDto.class))
-				.collect(Collectors.toList());
+		try {
+			this.orderRules.CustomerIsPresent(customerId);
+			List<Order> orders = this.orderRepository.getByCustomer(customerId);
+			List<OrderResponseDto> data = orders.stream()
+					.map(x -> this.modelMapperService.forResponse().map(x, OrderResponseDto.class))
+					.collect(Collectors.toList());
 
-		Response<List<OrderResponseDto>> response = new Response<List<OrderResponseDto>>();
-		response.setData(data);
-		response.setStatusCode(HttpStatus.OK);
-		return response;
+			Response<List<OrderResponseDto>> response = new Response<List<OrderResponseDto>>();
+			response.setData(data);
+			response.setStatusCode(HttpStatus.OK);
+			return response;
+		} catch (Exception e) {
+			Response<List<OrderResponseDto>> response = new Response<List<OrderResponseDto>>();
+			response.setMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+			return response;
+		}
+
 	}
 
 	@Override

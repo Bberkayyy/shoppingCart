@@ -29,7 +29,7 @@ public class OrderRules implements IOrderRules {
 	}
 
 	@Override
-	public void OrderListByCustomer(int customerId) throws BusinessException {
+	public void OrderCanNotBeCreatedWhenHaveUnclosedOrder(int customerId) throws BusinessException {
 
 		List<Order> orders = this.orderRepository.getByCustomer(customerId);
 		if (orders != null && !orders.isEmpty()) {

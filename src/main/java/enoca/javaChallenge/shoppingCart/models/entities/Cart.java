@@ -17,7 +17,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @jakarta.persistence.Entity
 public class Cart extends Entity<Integer> {
-
+	
 	@Column(name="productCount")
 	private int productCount;
 	@Column(name="totalPrice")

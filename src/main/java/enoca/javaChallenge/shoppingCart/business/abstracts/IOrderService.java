@@ -24,6 +24,4 @@ public interface IOrderService {
 
 	Response<OrderResponseDto> isActiveToFalse(int id);
 
-	Response<OrderResponseDto> isActiveToTrue(int id);
-
 }

@@ -31,7 +31,6 @@ public class CartManager implements ICartService {
 	private final IModelMapperService modelMapperService;
 	private final ICartRules cartRules;
 
-
 	@Override
 	public Response<CartResponseDto> add(CartAddRequestDto addRequestDto) {
 
@@ -52,6 +51,7 @@ public class CartManager implements ICartService {
 				existingCart.setProductCount(newProductCount);
 				existingCart.setTotalPrice(newTotalPrice);
 				order.setTotalAmount(order.getTotalAmount() + product.getPrice() * addRequestDto.getProductCount());
+				product.setStock(product.getStock() - addRequestDto.getProductCount());
 				this.cartRepository.save(existingCart);
 			} else {
 				double totalPrice = (double) cart.getProductCount() * (double) product.getPrice();
@@ -60,6 +60,7 @@ public class CartManager implements ICartService {
 					order.getCarts().add(cart);
 					order.setTotalAmount(order.getTotalAmount() + totalPrice);
 				}
+				product.setStock(product.getStock() - addRequestDto.getProductCount());
 				this.cartRepository.save(cart);
 			}
 			Response<CartResponseDto> response = new Response<CartResponseDto>();
@@ -98,6 +99,7 @@ public class CartManager implements ICartService {
 			this.cartRules.OrderCanNotBeChangedIfHasBeenClosed(cart.getOrder().getId());
 			Order order = this.orderRepository.getById(cart.getOrder().getId());
 			order.setTotalAmount(order.getTotalAmount() - cart.getTotalPrice());
+			cart.getProduct().setStock(cart.getProduct().getStock() + cart.getProductCount());
 			this.cartRepository.delete(cart);
 			Response<CartResponseDto> response = new Response<CartResponseDto>();
 			response.setMessage("Ürün sepetten kaldırıldı.");
@@ -108,7 +110,6 @@ public class CartManager implements ICartService {
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 			return response;
 		}
-
 	}
 
 	@Override
@@ -116,6 +117,7 @@ public class CartManager implements ICartService {
 
 		try {
 			Cart cart = this.cartRepository.getById(id);
+			this.cartRules.OrderCanNotBeChangedIfHasBeenClosed(cart.getOrder().getId());
 			Order order = this.orderRepository.getById(cart.getOrder().getId());
 			int newProductCount = cart.getProductCount() - 1;
 			this.cartRules.ProductCountCanNotBeNegative(newProductCount);
@@ -123,6 +125,7 @@ public class CartManager implements ICartService {
 			cart.setProductCount(newProductCount);
 			cart.setTotalPrice(newTotalPrice);
 			order.setTotalAmount(order.getTotalAmount() - cart.getProduct().getPrice());
+			cart.getProduct().setStock(cart.getProduct().getStock() + 1);
 			this.cartRepository.save(cart);
 
 			Response<CartResponseDto> response = new Response<CartResponseDto>();
@@ -141,41 +144,28 @@ public class CartManager implements ICartService {
 	@Override
 	public Response<CartResponseDto> increaseProductCount(int id) {
 
-		Cart cart = this.cartRepository.getById(id);
-		Order order = this.orderRepository.getById(cart.getOrder().getId());
-		int newProductCount = cart.getProductCount() + 1;
-		double newTotalPrice = cart.getTotalPrice() + cart.getProduct().getPrice();
-		cart.setProductCount(newProductCount);
-		cart.setTotalPrice(newTotalPrice);
-		order.setTotalAmount(order.getTotalAmount() + cart.getProduct().getPrice());
-		this.cartRepository.save(cart);
+		try {
+			Cart cart = this.cartRepository.getById(id);
+			this.cartRules.OrderCanNotBeChangedIfHasBeenClosed(cart.getOrder().getId());
+			Order order = this.orderRepository.getById(cart.getOrder().getId());
+			int newProductCount = cart.getProductCount() + 1;
+			double newTotalPrice = cart.getTotalPrice() + cart.getProduct().getPrice();
+			cart.setProductCount(newProductCount);
+			cart.setTotalPrice(newTotalPrice);
+			order.setTotalAmount(order.getTotalAmount() + cart.getProduct().getPrice());
+			cart.getProduct().setStock(cart.getProduct().getStock() - 1);
+			this.cartRepository.save(cart);
 
-		Response<CartResponseDto> response = new Response<CartResponseDto>();
-		response.setMessage("Ürün miktarı arttırıldı.");
-		response.setStatusCode(HttpStatus.OK);
-		return response;
+			Response<CartResponseDto> response = new Response<CartResponseDto>();
+			response.setMessage("Ürün miktarı arttırıldı.");
+			response.setStatusCode(HttpStatus.OK);
+			return response;
+		} catch (Exception e) {
+			Response<CartResponseDto> response = new Response<CartResponseDto>();
+			response.setMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+			return response;
+		}
+
 	}
-
 }
-//@Override
-//public Response<List<CartResponseDto>> getCustomerCart(int customerId) {
-//
-//	try {
-//		this.cartRules.CustomerIsPresent(customerId);
-//		List<Cart> carts = this.cartRepository.getByCustomer(customerId);
-//		List<CartResponseDto> data = carts.stream()
-//				.map(x -> this.modelMapperService.forResponse().map(x, CartResponseDto.class))
-//				.collect(Collectors.toList());
-//
-//		Response<List<CartResponseDto>> response = new Response<List<CartResponseDto>>();
-//		response.setData(data);
-//		response.setStatusCode(HttpStatus.OK);
-//		return response;
-//	} catch (Exception e) {
-//		Response<List<CartResponseDto>> response = new Response<List<CartResponseDto>>();
-//		response.setMessage(e.getMessage());
-//		response.setStatusCode(HttpStatus.BAD_REQUEST);
-//		return response;
-//	}
-//
-//}
